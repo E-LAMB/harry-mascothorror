@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public bool doCrouching = true;
+    public bool doSprinting = true;
+
     public float walkSpeed = 5f;
     public float sprintMultiplier = 1.8f;
     public float crouchMultiplier = 0.5f;
@@ -73,28 +76,34 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleCrouch()
     {
-        if (Input.GetKeyDown(crouchKey))
+        if (doCrouching)
         {
-            isCrouching = true;
-            isSprinting = false;
-            transform.localScale = new Vector3(originalScale.x, originalScale.y * crouchScale, originalScale.z);
-        }
-        else if (Input.GetKeyUp(crouchKey))
-        {
-            isCrouching = false;
-            transform.localScale = originalScale;
+            if (Input.GetKeyDown(crouchKey))
+            {
+                isCrouching = true;
+                isSprinting = false;
+                transform.localScale = new Vector3(originalScale.x, originalScale.y * crouchScale, originalScale.z);
+            }
+            else if (Input.GetKeyUp(crouchKey))
+            {
+                isCrouching = false;
+                transform.localScale = originalScale;
+            }
         }
     }
 
     void HandleSprint()
     {
-        if (Input.GetKeyDown(sprintKey) && !isCrouching)
+        if (doSprinting)
         {
-            isSprinting = true;
-        }
-        else if(Input.GetKeyUp(sprintKey))
-        {
-            isSprinting = false;
+            if (Input.GetKeyDown(sprintKey) && !isCrouching)
+            {
+                isSprinting = true;
+            }
+            else if (Input.GetKeyUp(sprintKey))
+            {
+                isSprinting = false;
+            }
         }
     }
 
