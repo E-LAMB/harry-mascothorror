@@ -8,7 +8,7 @@ public class ObjectPlacer : MonoBehaviour
     public float gridSize = 1f;
     public Vector3 gridOffset = Vector3.zero;
 
-    public GameObject objectToPlace;
+    public PlacementManager manager;
     public LayerMask placementLayer;
     public LayerMask placedObjectsLayer;
     public Vector3 checkBoxSize = new Vector3(0.45f, 0.45f, 0.45f);
@@ -22,36 +22,50 @@ public class ObjectPlacer : MonoBehaviour
     private GameObject previewInstance;
     private Renderer[] previewRenderers;
 
-    void Start()
-    {
-        previewInstance = Instantiate(objectToPlace);
-        DestroyImmediate(previewInstance.GetComponent<Collider>());
-        previewRenderers = previewInstance.GetComponentsInChildren<Renderer>();
-
-        ApplyPreviewMaterial(previewMaterialValid);
-    }
-
     void Update()
     {
-        UpdatePreview();
-
-        if (Input.GetMouseButtonDown(0))
+        if (manager.currentObjectToPlace != null)
         {
-            TryPlaceObject();
-        }
+            if (previewRenderers != null)
+            {
+                ApplyPreviewMaterial(previewMaterialValid);
+            }
 
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            currentRotation *= Quaternion.Euler(0f, -rotationStep, 0f);
-        }
+            if (previewInstance != null)
+            { 
+                UpdateRays(); 
+            }
 
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            currentRotation *= Quaternion.Euler(0f, rotationStep, 0f);
+            if (Input.GetMouseButtonDown(0))
+            {
+                TryPlaceObject();
+            }
+
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                currentRotation *= Quaternion.Euler(0f, -rotationStep, 0f);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                currentRotation *= Quaternion.Euler(0f, rotationStep, 0f);
+            }
         }
     }
 
-    void UpdatePreview()
+    public void UpdatePreview()
+    {
+        if (previewInstance != null)
+        {
+            DestroyImmediate(previewInstance);
+        }
+
+        previewInstance = Instantiate(manager.currentObjectToPlace);
+        DestroyImmediate(previewInstance.GetComponent<Collider>());
+        previewRenderers = previewInstance.GetComponentsInChildren<Renderer>();
+    }
+
+    void UpdateRays()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -73,7 +87,7 @@ public class ObjectPlacer : MonoBehaviour
 
         if (!IsPositionOccupied(placePos))
         {
-            GameObject placed = Instantiate(objectToPlace, placePos, currentRotation);
+            GameObject placed = Instantiate(manager.currentObjectToPlace, placePos, currentRotation);
             SetLayerRecursively(placed, LayerMaskToLayer(placedObjectsLayer));
         }
         else

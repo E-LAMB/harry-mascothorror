@@ -24,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
     public float groundCheckDistance = 0.4f;
     public LayerMask groundMask;
     private bool isGrounded;
+    public bool canMove = true;
 
     private CharacterController controller;
     private Vector3 moveDirection;
@@ -36,10 +37,13 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        HandleGroundCheck();
-        HandleCrouch();
-        HandleSprint();
-        HandleMovement();
+        if (canMove)
+        {
+            HandleGroundCheck();
+            HandleCrouch();
+            HandleSprint();
+            HandleMovement();
+        }
     }
 
     void HandleMovement()
