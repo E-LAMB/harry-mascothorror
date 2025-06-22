@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 
 public class ObjectPlacer : MonoBehaviour
@@ -11,7 +10,6 @@ public class ObjectPlacer : MonoBehaviour
     public PlacementManager manager;
     public LayerMask placementLayer;
     public LayerMask placedObjectsLayer;
-    public Vector3 checkBoxSize = new Vector3(0.45f, 0.45f, 0.45f);
 
     private Quaternion currentRotation = Quaternion.identity;
     public float rotationStep = 90f;
@@ -111,9 +109,26 @@ public class ObjectPlacer : MonoBehaviour
 
     bool IsPositionOccupied(Vector3 position)
     {
-        Collider[] hits = Physics.OverlapBox(position, checkBoxSize, Quaternion.identity, placedObjectsLayer);
-        return hits.Length > 0;
+        if (previewInstance == null)
+            return true;
+
+        Collider previewCollider = previewInstance.GetComponentInChildren<Collider>();
+        if (previewCollider == null)
+            return true;
+
+        Vector3 center = previewCollider.bounds.center;
+        Vector3 halfExtents = previewCollider.bounds.extents;
+
+        Collider[] hits = Physics.OverlapBox(center, halfExtents, previewInstance.transform.rotation, placedObjectsLayer);
+        foreach (var hit in hits)
+        {
+            if (!hit.transform.IsChildOf(previewInstance.transform))
+                return true;
+        }
+
+        return false;
     }
+
 
     void ApplyPreviewMaterial(Material mat)
     {
@@ -127,8 +142,13 @@ public class ObjectPlacer : MonoBehaviour
     {
         if (previewInstance != null)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(previewInstance.transform.position, checkBoxSize * 2);
+            Collider previewCollider = previewInstance.GetComponentInChildren<Collider>();
+            if (previewCollider != null)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.matrix = previewInstance.transform.localToWorldMatrix;
+                Gizmos.DrawWireCube(previewCollider.bounds.center - previewInstance.transform.position, previewCollider.bounds.size);
+            }
         }
     }
 
