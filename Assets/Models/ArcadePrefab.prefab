@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5961406879801140617}
   - component: {fileID: 3473711325226574785}
   - component: {fileID: 6141693452629919757}
-  m_Layer: 7
+  m_Layer: 3
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -116,7 +116,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6513094948711034419}
   - component: {fileID: 8500923321774371762}
-  m_Layer: 7
+  m_Layer: 3
   m_Name: ArcadePrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
