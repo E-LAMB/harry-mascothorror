@@ -50,6 +50,8 @@ public class PlacementManager : MonoBehaviour
 
     public void OpenMenu()
     {
+        currentObjectToPlace = null;
+        Destroy(placer.previewInstance);
         menuParent.SetActive(true);
         inMenu = true;
         player.canMove = false;

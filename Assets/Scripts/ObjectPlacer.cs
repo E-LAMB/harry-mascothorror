@@ -17,7 +17,7 @@ public class ObjectPlacer : MonoBehaviour
     public Material previewMaterialValid;
     public Material previewMaterialInvalid;
 
-    private GameObject previewInstance;
+    public GameObject previewInstance;
     private Renderer[] previewRenderers;
 
     void Update()
