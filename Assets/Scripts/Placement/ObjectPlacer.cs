@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.AI.Navigation;
 
 public class ObjectPlacer : MonoBehaviour
 {
@@ -19,6 +20,8 @@ public class ObjectPlacer : MonoBehaviour
 
     public GameObject previewInstance;
     private Renderer[] previewRenderers;
+
+    public NavMeshSurface navMeshSurface;
 
     void Update()
     {
@@ -87,6 +90,11 @@ public class ObjectPlacer : MonoBehaviour
         {
             GameObject placed = Instantiate(manager.currentObjectToPlace, placePos, currentRotation);
             SetLayerRecursively(placed, LayerMaskToLayer(placedObjectsLayer));
+
+            if (navMeshSurface != null)
+            {
+                navMeshSurface.BuildNavMesh();
+            }
         }
         else
         {

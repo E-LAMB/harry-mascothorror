@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 
 public class EnemyJumpscareTrigger : MonoBehaviour
@@ -14,10 +15,12 @@ public class EnemyJumpscareTrigger : MonoBehaviour
     private bool hasTriggered = false;
     public Transform enemyTransform;
     private Enemy enemyScript;
+    public GameObject loser;
 
     void Start()
     {
         enemyScript = enemyTransform.GetComponent<Enemy>();
+        loser.SetActive(false);
     }
 
     void OnTriggerEnter(Collider other)
@@ -62,5 +65,6 @@ public class EnemyJumpscareTrigger : MonoBehaviour
 
             yield return null;
         }
+        loser.SetActive(true);
     }
 }

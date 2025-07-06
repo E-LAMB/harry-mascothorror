@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    public enum State { Patrolling, Chasing }
+    public State currentState = State.Patrolling;
+
     public List<Transform> patrolPoints;
-    public float moveSpeed = 3f;
+    public float patrolSpeed = 3f;
+    public float chaseSpeed = 5f;
     public float reachThreshold = 0.2f;
 
     public float viewAngle = 90f;
@@ -13,44 +17,69 @@ public class Enemy : MonoBehaviour
     public LayerMask playerLayer;
     public LayerMask obstructionMask;
     public Transform viewOrigin;
+
     public string sightAnimationName = "Looking";
     public Animator animator;
+
+    public Transform player;
+    public float chaseForgetTime = 10f;
+
+    public AudioSource audioSource;
+    public AudioClip alertSound;
 
     public bool isFrozen = false;
     private int currentPointIndex = 0;
     private bool waiting = false;
+    private bool hasPlayedAlert = false;
+    private float timeSinceLastSeen = 0f;
+    private UnityEngine.AI.NavMeshAgent agent;
+
+    void Start()
+    {
+        agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        agent.speed = patrolSpeed;
+    }
 
     void Update()
     {
+        if (isFrozen)
+        {
+            agent.isStopped = true;
+            return;
+        }
+
         if (patrolPoints.Count == 0 || waiting)
             return;
 
-        Patrol();
-        DetectPlayer();
+        switch (currentState)
+        {
+            case State.Patrolling:
+                if (!waiting)
+                {
+                    agent.speed = patrolSpeed;
+                    Patrol();
+                    DetectPlayer();
+                }
+                break;
+
+            case State.Chasing:
+                agent.speed = chaseSpeed;
+                ChasePlayer();
+                break;
+
+        }
     }
 
     void Patrol()
     {
-        Transform targetPoint = patrolPoints[currentPointIndex];
-        Vector3 direction = (targetPoint.position - transform.position).normalized;
-        Vector3 move = direction * moveSpeed * Time.deltaTime;
-
-        if (isFrozen)
-        {
-            return;
-        }
-
-        transform.position += move;
-
-        if (move != Vector3.zero)
-        {
-            Quaternion lookRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
-        }
-
-        if (Vector3.Distance(transform.position, targetPoint.position) <= reachThreshold)
+        if (!agent.pathPending && agent.remainingDistance < 0.5f)
         {
             StartCoroutine(WaitBeforeNextPoint());
+        }
+        else
+        {
+            if (!agent.hasPath)
+                agent.SetDestination(patrolPoints[currentPointIndex].position);
         }
     }
 
@@ -80,6 +109,7 @@ public class Enemy : MonoBehaviour
         }
 
         currentPointIndex = (currentPointIndex + 1) % patrolPoints.Count;
+        agent.SetDestination(patrolPoints[currentPointIndex].position);
         waiting = false;
     }
 
@@ -99,8 +129,44 @@ public class Enemy : MonoBehaviour
 
                 if (!Physics.Raycast(transform.position, dirToPlayer, distToPlayer, obstructionMask))
                 {
-                    Debug.Log("Player spotted by sight rays!");
+                    currentState = State.Chasing;
+                    timeSinceLastSeen = 0f;
+
+                    if (!hasPlayedAlert && audioSource && alertSound)
+                    {
+                        audioSource.PlayOneShot(alertSound);
+                        hasPlayedAlert = true;
+                        Debug.Log("Player spotted by sight rays!");
+                    }
                 }
+            }
+        }
+    }
+
+    void ChasePlayer()
+    {
+        if (player == null) return;
+
+        agent.SetDestination(player.position);
+
+        Vector3 dirToPlayer = (player.position - viewOrigin.position).normalized;
+        float distToPlayer = Vector3.Distance(viewOrigin.position, player.position);
+
+        if (Vector3.Angle(viewOrigin.forward, dirToPlayer) < viewAngle / 2 &&
+            distToPlayer < viewDistance &&
+            !Physics.Raycast(viewOrigin.position, dirToPlayer, distToPlayer, obstructionMask))
+        {
+            timeSinceLastSeen = 0f;
+        }
+        else
+        {
+            timeSinceLastSeen += Time.deltaTime;
+
+            if (timeSinceLastSeen > chaseForgetTime)
+            {
+                currentState = State.Patrolling;
+                agent.SetDestination(patrolPoints[currentPointIndex].position);
+                hasPlayedAlert = false;
             }
         }
     }
